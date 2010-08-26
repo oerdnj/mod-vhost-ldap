@@ -18,6 +18,8 @@ clean:
 	rm -rf mod_vhost_ldap-$(VERSION).tar.gz
 
 mod_vhost_ldap.o: mod_vhost_ldap.c
+	# Try building with per request document root and if it fails, do the normal build (kinda ugly, but should work)
+	$(APXS) -Wc,-Wall -Wc,-Werror -Wc,-g -Wc,-DDEBUG -Wc,-DMOD_VHOST_LDAP_VERSION=\\\"mod_vhost_ldap/$(VERSION)\\\" -Wc,-DHAS_PER_REQUEST_DOCUMENT_ROOT -c -lldap_r mod_vhost_ldap.c || \
 	$(APXS) -Wc,-Wall -Wc,-Werror -Wc,-g -Wc,-DDEBUG -Wc,-DMOD_VHOST_LDAP_VERSION=\\\"mod_vhost_ldap/$(VERSION)\\\" -c -lldap_r mod_vhost_ldap.c
 
 archive:

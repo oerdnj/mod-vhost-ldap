@@ -440,8 +440,10 @@ static int mod_vhost_ldap_translate_name(request_rec *r)
     char filtbuf[FILTER_LENGTH];
     mod_vhost_ldap_config_t *conf =
 	(mod_vhost_ldap_config_t *)ap_get_module_config(r->server->module_config, &vhost_ldap_module);
+#ifndef HAS_PER_REQUEST_DOCUMENT_ROOT
     core_server_config *core =
         (core_server_config *)ap_get_module_config(r->server->module_config, &core_module);
+#endif
     util_ldap_connection_t *ldc = NULL;
     int result = 0;
     const char *dn = NULL;
@@ -452,6 +454,7 @@ static int mod_vhost_ldap_translate_name(request_rec *r)
     int sleep1 = 1;
     int sleep;
     struct berval hostnamebv, shostnamebv;
+    char **document_root_ptr;
 
     reqc =
 	(mod_vhost_ldap_request_t *)apr_pcalloc(r->pool, sizeof(mod_vhost_ldap_request_t));
@@ -655,15 +658,19 @@ null:
         return HTTP_INTERNAL_SERVER_ERROR;
     }
 
+#ifndef HAS_PER_REQUEST_DOCUMENT_ROOT
     if ((core = apr_pmemdup(r->pool, core, sizeof(*core))) == NULL) {
         ap_log_rerror(APLOG_MARK, APLOG_ERR|APLOG_NOERRNO, 0, r, 
                       "[mod_vhost_ldap.c] translate: "
                       "translate failed; Unable to copy r->core structure");
         return HTTP_INTERNAL_SERVER_ERROR;
     }
-    ap_set_module_config(r->server->module_config, &core_module, core);
+    ap_set_module_config(r->server->module_config, &core_module, core);    
 
-    /* Stolen from server/core.c */
+    document_root_ptr = (char **)&code->ap_document_root;
+#else
+    document_root_ptr = (char **)&r->document_root;
+#endif
 
     /* Make it absolute, relative to ServerRoot */
     reqc->docroot = ap_server_root_relative(r->pool, reqc->docroot);
@@ -676,14 +683,14 @@ null:
     }
 
     /* TODO: ap_configtestonly && ap_docrootcheck && */
-    if (apr_filepath_merge((char**)&core->ap_document_root, NULL, reqc->docroot,
+    if (apr_filepath_merge(document_root_ptr, NULL, reqc->docroot,
                            APR_FILEPATH_TRUENAME, r->pool) != APR_SUCCESS
         || !ap_is_directory(r->pool, reqc->docroot)) {
 
         ap_log_rerror(APLOG_MARK, APLOG_WARNING, 0, r,
 		      "[mod_vhost_ldap.c] set_document_root: Warning: DocumentRoot [%s] does not exist",
 		      reqc->docroot);
-        core->ap_document_root = reqc->docroot;
+        *document_root_ptr = reqc->docroot;
     }
 
     /* Hack to allow post-processing by other modules (mod_rewrite, mod_alias) */
