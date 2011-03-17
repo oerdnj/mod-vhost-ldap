@@ -27,7 +27,7 @@ archive:
 	cd $(TMPDIR)/mod-vhost-ldap-$(VERSION) && \
 	git checkout upstream
 	cd $(TMPDIR) && \
-	tar --exclude .git/ --exclude debian/ -czf $(CURDIR)/../mod-vhost-ldap-$(VERSION).tar.gz mod-vhost-ldap-$(VERSION)
+	tar --exclude-vcs --exclude debian/ -czf $(CURDIR)/../mod-vhost-ldap-$(VERSION).tar.gz mod-vhost-ldap-$(VERSION)
 
 format:
 	indent *.c
