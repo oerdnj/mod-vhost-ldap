@@ -4,6 +4,7 @@
 	                    for literal *.hostname
 	* mod_vhost_ldap.c, vhost_ldap.conf: Add new boolean option VhostLDAPWildcard
 	                                     to disable wildcard search completely
+	* mod_vhost_ldap.c: Fix cgi-bin processing (Courtesy of Anders Kaseorg)
 	
 2010-07-07 Ondřej Surý <ondrej@sury.org>
 	* VERSION: 2.0.5
