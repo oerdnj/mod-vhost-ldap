@@ -1,3 +1,10 @@
+2011-03-17 Ondřej Surý <ondrej@sury.org>
+	* VERSION: 2.0.6
+	* mod_vhost_ldap.c: Properly escape wildcard string to search
+	                    for literal *.hostname
+	* mod_vhost_ldap.c, vhost_ldap.conf: Add new boolean option VhostLDAPWildcard
+	                                     to disable wildcard search completely
+	
 2010-07-07 Ondřej Surý <ondrej@sury.org>
 	* VERSION: 2.0.5
 	* mod_vhost_ldap.c: Make a private copy of server config to each
