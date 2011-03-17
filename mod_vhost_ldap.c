@@ -83,6 +83,8 @@ typedef struct mod_vhost_ldap_config_t {
 
     char *fallback;                     /* Fallback virtual host */
 
+    int wildcard;                       /* Do wildcard search if host not found */
+
 } mod_vhost_ldap_config_t;
 
 typedef struct mod_vhost_ldap_request_t {
@@ -157,6 +159,7 @@ mod_vhost_ldap_create_server_config (apr_pool_t *p, server_rec *s)
     conf->bindpw = NULL;
     conf->deref = always;
     conf->fallback = NULL;
+    conf->wildcard = MVL_ENABLED;
 
     return conf;
 }
@@ -169,11 +172,7 @@ mod_vhost_ldap_merge_server_config(apr_pool_t *p, void *parentv, void *childv)
     mod_vhost_ldap_config_t *conf =
 	(mod_vhost_ldap_config_t *)apr_pcalloc(p, sizeof(mod_vhost_ldap_config_t));
 
-    if (child->enabled == MVL_UNSET) {
-	conf->enabled = parent->enabled;
-    } else {
-	conf->enabled = child->enabled;
-    }
+    conf->enabled = (child->enabled != MVL_UNSET) ? child-enabled : parent-enabled;
 
     if (child->have_ldap_url) {
 	conf->have_ldap_url = child->have_ldap_url;
@@ -206,6 +205,8 @@ mod_vhost_ldap_merge_server_config(apr_pool_t *p, void *parentv, void *childv)
     conf->bindpw = (child->bindpw ? child->bindpw : parent->bindpw);
 
     conf->fallback = (child->fallback ? child->fallback : parent->fallback);
+
+    conf->wildcard = (child->wildcard != MVL_UNSET) ? child->wildcard : parent->wildcard;
 
     return conf;
 }
@@ -398,6 +399,17 @@ static const char *mod_vhost_ldap_set_fallback(cmd_parms *cmd, void *dummy, cons
     return NULL;
 }
 
+static const char *mod_vhost_ldap_set_wildcard(cmd_parms *cmd, void *dummy, int enabled)
+{
+    mod_vhost_ldap_config_t *conf =
+	(mod_vhost_ldap_config_t *)ap_get_module_config(cmd->server->module_config,
+							&vhost_ldap_module);
+
+    conf->wildcard = (wildcard) ? MVL_ENABLED : MVL_DISABLED;
+
+    return NULL;
+}
+
 command_rec mod_vhost_ldap_cmds[] = {
     AP_INIT_TAKE1("VhostLDAPURL", mod_vhost_ldap_parse_url, NULL, RSRC_CONF,
                   "URL to define LDAP connection. This should be an RFC 2255 compliant\n"
@@ -427,6 +439,9 @@ command_rec mod_vhost_ldap_cmds[] = {
 		  "Set default virtual host which will be used when requested hostname"
 		  "is not found in LDAP database. This option can be used to display"
 		  "\"virtual host not found\" type of page."),
+
+    AP_INIT_FLAG("VhostLDAPWildcard", mod_vhost_ldap_set_wildcard, NULL, RSRC_CONF,
+                 "Set to off to disable wildcard search if the requested hostname is not found."),
 
     {NULL}
 };
@@ -521,17 +536,19 @@ fallback:
     }
 
     if (result == LDAP_NO_SUCH_OBJECT) {
-	if (strcmp(hostname, "*") != 0) {
-	    if (strncmp(hostname, "*.", 2) == 0)
-		hostname += 2;
-	    hostname += strcspn(hostname, ".");
-	    hostname = apr_pstrcat(r->pool, "*", hostname, NULL);
-	    ap_log_rerror(APLOG_MARK, APLOG_NOTICE|APLOG_NOERRNO, 0, r,
-		          "[mod_vhost_ldap.c] translate: "
-			  "virtual host not found, trying wildcard %s",
-			  hostname);
-	    goto fallback;
-	}
+        if (conf->wildcard == MVL_ENABLED) {
+	    if (strcmp(hostname, "\\*") != 0) {
+	        if (strncmp(hostname, "\\*.", 3) == 0)
+		    hostname += 3;
+                hostname += strcspn(hostname, ".");
+                hostname = apr_pstrcat(r->pool, "\\*", hostname, NULL);
+                ap_log_rerror(APLOG_MARK, APLOG_NOTICE|APLOG_NOERRNO, 0, r,
+		              "[mod_vhost_ldap.c] translate: "
+			      "virtual host not found, trying wildcard %s",
+			      hostname);
+	        goto fallback;
+	    }
+        }
 
 null:
 	if (conf->fallback && (is_fallback++ <= 0)) {
