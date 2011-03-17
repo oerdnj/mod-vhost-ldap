@@ -172,7 +172,7 @@ mod_vhost_ldap_merge_server_config(apr_pool_t *p, void *parentv, void *childv)
     mod_vhost_ldap_config_t *conf =
 	(mod_vhost_ldap_config_t *)apr_pcalloc(p, sizeof(mod_vhost_ldap_config_t));
 
-    conf->enabled = (child->enabled != MVL_UNSET) ? child-enabled : parent-enabled;
+    conf->enabled = (child->enabled != MVL_UNSET) ? child->enabled : parent->enabled;
 
     if (child->have_ldap_url) {
 	conf->have_ldap_url = child->have_ldap_url;
@@ -399,7 +399,7 @@ static const char *mod_vhost_ldap_set_fallback(cmd_parms *cmd, void *dummy, cons
     return NULL;
 }
 
-static const char *mod_vhost_ldap_set_wildcard(cmd_parms *cmd, void *dummy, int enabled)
+static const char *mod_vhost_ldap_set_wildcard(cmd_parms *cmd, void *dummy, int wildcard)
 {
     mod_vhost_ldap_config_t *conf =
 	(mod_vhost_ldap_config_t *)ap_get_module_config(cmd->server->module_config,
@@ -686,7 +686,7 @@ null:
     }
     ap_set_module_config(r->server->module_config, &core_module, core);    
 
-    document_root_ptr = (char **)&code->ap_document_root;
+    document_root_ptr = (char **)&core->ap_document_root;
 #else
     document_root_ptr = (char **)&r->document_root;
 #endif
@@ -712,7 +712,7 @@ null:
         *document_root_ptr = reqc->docroot;
     }
 
-    /* Hack to allow post-processing by other modules (mod_rewrite, mod_alias) */
+    /* Return DECLINE to allow post-processing by other modules (mod_rewrite, mod_alias) */
     return ret;
 }
 
