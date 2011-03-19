@@ -1,3 +1,7 @@
+2011-03-18 Ondřej Surý <ondrej@sury.org>
+	* VERSION: 2.0.7
+	* mod_vhost_ldap.c: Revert escaping wildcard character as it was
+			    already done before by ldap_bv2escaped_filter_value
 2011-03-17 Ondřej Surý <ondrej@sury.org>
 	* VERSION: 2.0.6
 	* mod_vhost_ldap.c: Properly escape wildcard string to search
