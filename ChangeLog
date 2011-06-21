@@ -1,3 +1,7 @@
+2011-06-20 Ondřej Surý <ondrej@sury.org>
+	* VERSION: 2.0.8
+	* mod_vhost_ldap.c: Don't copy server struct if we have per request document root
+
 2011-03-18 Ondřej Surý <ondrej@sury.org>
 	* VERSION: 2.0.7
 	* mod_vhost_ldap.c: Revert escaping wildcard character as it was
