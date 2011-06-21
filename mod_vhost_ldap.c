@@ -655,6 +655,8 @@ null:
 	return DECLINED;
     }
 
+#ifndef HAS_PER_REQUEST_DOCUMENT_ROOT
+
     if ((r->server = apr_pmemdup(r->pool, r->server, sizeof(*r->server))) == NULL) {
         ap_log_rerror(APLOG_MARK, APLOG_ERR|APLOG_NOERRNO, 0, r, 
                       "[mod_vhost_ldap.c] translate: "
@@ -677,7 +679,6 @@ null:
         return HTTP_INTERNAL_SERVER_ERROR;
     }
 
-#ifndef HAS_PER_REQUEST_DOCUMENT_ROOT
     if ((core = apr_pmemdup(r->pool, core, sizeof(*core))) == NULL) {
         ap_log_rerror(APLOG_MARK, APLOG_ERR|APLOG_NOERRNO, 0, r, 
                       "[mod_vhost_ldap.c] translate: "
