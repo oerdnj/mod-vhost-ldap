@@ -1,3 +1,7 @@
+2013-07-12 Ondřej Surý <ondrej@sury.org>
+	* 2.4.0: Add support for Apache 2.4, if you need mod_vhost_ldap
+	         for Apache 2.0 or 2.2, please use mod_vhost_ldap 2.0.8
+
 2010-06-08 Ondřej Surý <ondrej@sury.org>
 	* 2.0.0: Big change in internal logic.  mod_vhost_ldap doesn't
 	lookup files and directories itself, but only mangle internal

@@ -1,3 +1,7 @@
+2013-07-12 Ondřej Surý <ondrej@sury.org>
+	* VERSION: 2.4.0
+	* mod_vhost_ldap.c: Rely on ap_set_document_root() to set per request document root
+
 2011-06-20 Ondřej Surý <ondrej@sury.org>
 	* VERSION: 2.0.8
 	* mod_vhost_ldap.c: Don't copy server struct if we have per request document root
@@ -13,7 +17,7 @@
 	* mod_vhost_ldap.c, vhost_ldap.conf: Add new boolean option VhostLDAPWildcard
 	                                     to disable wildcard search completely
 	* mod_vhost_ldap.c: Fix cgi-bin processing (Courtesy of Anders Kaseorg)
-	
+
 2010-07-07 Ondřej Surý <ondrej@sury.org>
 	* VERSION: 2.0.5
 	* mod_vhost_ldap.c: Make a private copy of server config to each
@@ -39,11 +43,11 @@
 	* mod_vhost_ldap.c: Create and use function set_document_root inspired by apache2.2
 	* mod_vhost_ldap.c: Return correct error codes on failures and not DECLINED
 	* mod_vhost_ldap.c: Put translate_name hook at FIRST place
-	
+
 2006-11-01 Ondřej Surý <ondrej@sury.org>
 	* VERSION: 1.2.0 release
 	* mod_vhost_ldap.c: release apache-2.2 version as 1.2.0
-	
+
 2006-04-21 Bart Vanbrabant <bart.vanbrabant@zoeloelip.be>
 	* VERSION: 1.0.1 release
 	* mod_vhost_ldap.c: add support for apache-2.2.x
@@ -51,7 +55,7 @@
 2006-01-30 Ondřej Surý <ondrej@sury.org>
 	* VERSION: 1.0.0 release
 	* Fix small memory leak when used in subrequest (e.g. fastcgi)
-	
+
 2005-10-03 Ondřej Surý <ondrej@sury.org>
 	* mod_vhost_ldap.c: add support for running from subrequest (ie. mod_fastcgi)
 	* VERSION: 0.2.9 release
@@ -63,7 +67,7 @@
 2005-09-19 Ondřej Surý <ondrej@sury.org>
 	* mod_vhost_ldap.c: add more information to log when vhost is not found
 	* VERSION: 0.2.7 release
-	
+
 2005-09-16 Ondřej Surý <ondrej@sury.org>
 	* mod_vhost_ldap.c: implement merge_server_config to allow different settings for different vhosts
 	* VERSION: 0.2.6 release
@@ -77,9 +81,9 @@
 
 2005-08-30 Ondřej Surý <ondrej@sury.org>
 	* mod_vhost_ldap.c: use VERSION file as authoritative source for VERSION number
-	* mod_vhost_ldap.c: MIN_UID/MIN_GID lowered to 100/100 
+	* mod_vhost_ldap.c: MIN_UID/MIN_GID lowered to 100/100
 	* VERSION: 0.2.4 release
-	
+
 2005-08-17 Ondřej Surý <ondrej@sury.org>
 	* Change off-by-one error in minimum UID/GID [courtesy of Fabian Fagerholm]
 	* Fix LDAP schema (at last) [courtesy of Fabian Fagerholm]
@@ -95,7 +99,7 @@
 2005-08-02 Ondřej Surý <ondrej@sury.org>
 	* Complete rewrite...
 	* Change apacheUsername to apacheSuexecUid and apacheSuexecGid
-	
+
 2005-05-25 Ondrej Sury <ondrej@sury.org>
 	* Version 0.2.0
 	* Renamed to mod_vhost_ldap
