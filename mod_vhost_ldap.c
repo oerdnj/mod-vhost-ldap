@@ -41,6 +41,10 @@
 #error mod_vhost_ldap requires APR-util to have LDAP support built in
 #endif
 
+#if !AP_MODULE_MAGIC_AT_LEAST(20110605,0)
+#error mod_vhost_ldap 2.4 requires Apache 2.4
+#endif
+
 #if !defined(WIN32) && !defined(OS2) && !defined(BEOS) && !defined(NETWARE)
 #define HAVE_UNIX_SUEXEC
 #endif
@@ -455,10 +459,6 @@ static int mod_vhost_ldap_translate_name(request_rec *r)
     char filtbuf[FILTER_LENGTH];
     mod_vhost_ldap_config_t *conf =
 	(mod_vhost_ldap_config_t *)ap_get_module_config(r->server->module_config, &vhost_ldap_module);
-#ifndef HAS_PER_REQUEST_DOCUMENT_ROOT
-    core_server_config *core =
-        (core_server_config *)ap_get_module_config(r->server->module_config, &core_module);
-#endif
     util_ldap_connection_t *ldc = NULL;
     int result = 0;
     const char *dn = NULL;
@@ -469,7 +469,7 @@ static int mod_vhost_ldap_translate_name(request_rec *r)
     int sleep1 = 1;
     int sleep;
     struct berval hostnamebv, shostnamebv;
-    char **document_root_ptr;
+    char *document_root;
     int ret = DECLINED;
 
     reqc =
@@ -655,42 +655,7 @@ null:
 	return DECLINED;
     }
 
-#ifndef HAS_PER_REQUEST_DOCUMENT_ROOT
-
-    if ((r->server = apr_pmemdup(r->pool, r->server, sizeof(*r->server))) == NULL) {
-        ap_log_rerror(APLOG_MARK, APLOG_ERR|APLOG_NOERRNO, 0, r, 
-                      "[mod_vhost_ldap.c] translate: "
-                      "translate failed; Unable to copy r->server structure");
-	return HTTP_INTERNAL_SERVER_ERROR;
-    }
-
-    r->server->server_hostname = reqc->name;
-
-    if (reqc->admin) {
-	r->server->server_admin = reqc->admin;
-    }
-
-    if ((r->server->module_config = apr_pmemdup(r->pool, r->server->module_config,
-						sizeof(void *) *
-						(total_modules + DYNAMIC_MODULE_LIMIT))) == NULL) {
-        ap_log_rerror(APLOG_MARK, APLOG_ERR|APLOG_NOERRNO, 0, r, 
-                      "[mod_vhost_ldap.c] translate: "
-                      "translate failed; Unable to copy r->server->module_config structure");
-        return HTTP_INTERNAL_SERVER_ERROR;
-    }
-
-    if ((core = apr_pmemdup(r->pool, core, sizeof(*core))) == NULL) {
-        ap_log_rerror(APLOG_MARK, APLOG_ERR|APLOG_NOERRNO, 0, r, 
-                      "[mod_vhost_ldap.c] translate: "
-                      "translate failed; Unable to copy r->core structure");
-        return HTTP_INTERNAL_SERVER_ERROR;
-    }
-    ap_set_module_config(r->server->module_config, &core_module, core);    
-
-    document_root_ptr = (char **)&core->ap_document_root;
-#else
-    document_root_ptr = (char **)&r->document_root;
-#endif
+    document_root = apr_pstrdup(r->pool, ap_context_document_root(r));
 
     /* Make it absolute, relative to ServerRoot */
     reqc->docroot = ap_server_root_relative(r->pool, reqc->docroot);
@@ -703,15 +668,18 @@ null:
     }
 
     /* TODO: ap_configtestonly && ap_docrootcheck && */
-    if (apr_filepath_merge(document_root_ptr, NULL, reqc->docroot,
+    if (apr_filepath_merge(&document_root, NULL, reqc->docroot,
                            APR_FILEPATH_TRUENAME, r->pool) != APR_SUCCESS
         || !ap_is_directory(r->pool, reqc->docroot)) {
 
         ap_log_rerror(APLOG_MARK, APLOG_WARNING, 0, r,
 		      "[mod_vhost_ldap.c] set_document_root: Warning: DocumentRoot [%s] does not exist",
 		      reqc->docroot);
-        *document_root_ptr = reqc->docroot;
+        document_root = reqc->docroot;
     }
+
+    ap_set_context_info(r, NULL, document_root);
+    ap_set_document_root(r, document_root);
 
     /* Return DECLINE to allow post-processing by other modules (mod_rewrite, mod_alias) */
     return ret;
@@ -773,9 +741,7 @@ mod_vhost_ldap_register_hooks (apr_pool_t * p)
 #ifdef HAVE_UNIX_SUEXEC
     ap_hook_get_suexec_identity(mod_vhost_ldap_get_suexec_id_doer, NULL, NULL, APR_HOOK_MIDDLE);
 #endif
-#if (APR_MAJOR_VERSION >= 1)
     ap_hook_optional_fn_retrieve(ImportULDAPOptFn,NULL,NULL,APR_HOOK_MIDDLE);
-#endif
 }
 
 module AP_MODULE_DECLARE_DATA vhost_ldap_module = {
